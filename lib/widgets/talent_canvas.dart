@@ -297,7 +297,11 @@ class ConnectionPainter extends CustomPainter {
       final startX = start.dx + (start.dx < end.dx ? offsetX : -offsetX);
       final endX = end.dx - (start.dx < end.dx ? offsetX : -offsetX);
       path.moveTo(startX, start.dy);
-      path.lineTo(endX - 5, end.dy);
+      if(startX - endX < 0) {
+        path.lineTo(endX - 5, end.dy);
+      } else {
+        path.lineTo(endX + 5, end.dy);
+      }
       canvas.drawPath(path, linePaint);
       final rotation = start.dx < end.dx ? -1.5708 : 1.5708;
       _drawArrowhead(canvas, Offset(endX, end.dy), rotation, arrowPaint);
