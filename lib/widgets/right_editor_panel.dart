@@ -71,6 +71,8 @@ class RightEditorPanel extends StatelessWidget {
           _buildLabel('Name'),
           const SizedBox(height: 12),
           _buildTextField(
+            node: node,
+            fieldName: 'name',
             initialValue: node.name,
             onChanged: (val) => provider.updateSelectedNode(name: val),
           ),
@@ -78,6 +80,8 @@ class RightEditorPanel extends StatelessWidget {
           _buildLabel('Max Ranks'),
           const SizedBox(height: 12),
           _buildTextField(
+            node: node,
+            fieldName: 'ranks',
             initialValue: node.maxRanks.toString(),
             keyboardType: TextInputType.number,
             onChanged: (val) {
@@ -89,6 +93,8 @@ class RightEditorPanel extends StatelessWidget {
           _buildLabel('Description'),
           const SizedBox(height: 12),
           _buildTextField(
+            node: node,
+            fieldName: 'description',
             initialValue: node.description,
             maxLines: 4,
             onChanged: (val) => provider.updateSelectedNode(description: val),
@@ -128,6 +134,8 @@ class RightEditorPanel extends StatelessWidget {
   }
 
   Widget _buildTextField({
+    required TalentNode node,
+    required String fieldName,
     required String initialValue,
     required Function(String) onChanged,
     int maxLines = 1,
@@ -141,7 +149,7 @@ class RightEditorPanel extends StatelessWidget {
         border: Border.all(color: Colors.white10),
       ),
       child: TextFormField(
-        key: Key(initialValue), // Force rebuild when selection changes
+        key: ValueKey('${node.id}_$fieldName'),
         initialValue: initialValue,
         onChanged: onChanged,
         maxLines: maxLines,

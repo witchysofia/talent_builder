@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/talent_provider.dart';
 import '../models/talent_node.dart';
@@ -133,12 +134,32 @@ class _TalentGridCellState extends State<_TalentGridCell> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<TalentProvider>(context, listen: false);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: widget.onTap,
+        onTap: () {
+          final isShiftPressed = HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftLeft) || 
+                               HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftRight);
+          
+          if (isShiftPressed && widget.node != null && provider.selectedNodeId != null && provider.selectedNodeId != widget.node!.id) {
+            // Shift + Click Shortcut: Add clicked node as requirement for selected node
+            final selectedNode = provider.selectedNode;
+            if (selectedNode != null) {
+              final reqs = List<String>.from(selectedNode.requirements);
+              if (!reqs.contains(widget.node!.id)) {
+                reqs.add(widget.node!.id);
+                provider.updateSelectedNode(requirements: reqs);
+              }
+            }
+          } else {
+            // Normal click
+            widget.onTap();
+          }
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
@@ -268,7 +289,7 @@ class ConnectionPainter extends CustomPainter {
     if (start.dx == end.dx) {
       // Vertical line (Downward)
       path.moveTo(start.dx, start.dy + offsetY);
-      path.lineTo(end.dx, end.dy - offsetY);
+      path.lineTo(end.dx, end.dy - offsetY -5);
       canvas.drawPath(path, linePaint);
       _drawArrowhead(canvas, Offset(end.dx, end.dy - offsetY), 0, arrowPaint);
     } else if (start.dy == end.dy) {
@@ -276,7 +297,7 @@ class ConnectionPainter extends CustomPainter {
       final startX = start.dx + (start.dx < end.dx ? offsetX : -offsetX);
       final endX = end.dx - (start.dx < end.dx ? offsetX : -offsetX);
       path.moveTo(startX, start.dy);
-      path.lineTo(endX, end.dy);
+      path.lineTo(endX - 5, end.dy);
       canvas.drawPath(path, linePaint);
       final rotation = start.dx < end.dx ? -1.5708 : 1.5708;
       _drawArrowhead(canvas, Offset(endX, end.dy), rotation, arrowPaint);
@@ -285,7 +306,7 @@ class ConnectionPainter extends CustomPainter {
       final startX = start.dx + (start.dx < end.dx ? offsetX : -offsetX);
       path.moveTo(startX, start.dy);
       path.lineTo(end.dx, start.dy);
-      path.lineTo(end.dx, end.dy - offsetY);
+      path.lineTo(end.dx, end.dy - offsetY - 5);
       canvas.drawPath(path, linePaint);
       
       _drawArrowhead(canvas, Offset(end.dx, end.dy - offsetY), 0, arrowPaint);

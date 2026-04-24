@@ -17,6 +17,7 @@ class TalentProvider with ChangeNotifier {
 
   // Current tree getters
   String get treeName => _allTrees.isEmpty ? 'New Custom Tree' : _allTrees[_currentTreeIndex]['treeName'];
+  String get treeIconPath => _allTrees.isEmpty ? 'icons/ability_druid_berserk.png' : (_allTrees[_currentTreeIndex]['treeIconPath'] ?? 'icons/ability_druid_berserk.png');
   int get rows => _allTrees.isEmpty ? 7 : _allTrees[_currentTreeIndex]['rows'];
   int get columns => 4;
   Map<String, TalentNode> get nodes {
@@ -31,6 +32,12 @@ class TalentProvider with ChangeNotifier {
   }
   
   List<String> get treeNames => _allTrees.map((t) => t['treeName'] as String).toList();
+  String getTreeIconPath(int index) {
+    if (index >= 0 && index < _allTrees.length) {
+      return _allTrees[index]['treeIconPath'] ?? 'icons/ability_druid_berserk.png';
+    }
+    return 'icons/ability_druid_berserk.png';
+  }
   int get currentTreeIndex => _currentTreeIndex;
   String? get selectedNodeId => _selectedNodeId;
   TalentNode? get selectedNode => selectedNodeId != null ? nodes[selectedNodeId] : null;
@@ -52,6 +59,7 @@ class TalentProvider with ChangeNotifier {
   void _initializeDefaultTree() {
     _allTrees = [{
       'treeName': 'New Custom Tree',
+      'treeIconPath': 'icons/ability_druid_berserk.png',
       'rows': 7,
       'nodes': [],
     }];
@@ -66,6 +74,14 @@ class TalentProvider with ChangeNotifier {
   void setTreeName(String name) {
     if (_allTrees.isNotEmpty) {
       _allTrees[_currentTreeIndex]['treeName'] = name;
+      _saveToStorage();
+      notifyListeners();
+    }
+  }
+
+  void setTreeIcon(String iconPath) {
+    if (_allTrees.isNotEmpty) {
+      _allTrees[_currentTreeIndex]['treeIconPath'] = iconPath;
       _saveToStorage();
       notifyListeners();
     }
@@ -90,6 +106,7 @@ class TalentProvider with ChangeNotifier {
   void createNewTree() {
     _allTrees.add({
       'treeName': 'Untitled Tree ${_allTrees.length + 1}',
+      'treeIconPath': 'icons/ability_druid_berserk.png',
       'rows': 7,
       'nodes': [],
     });

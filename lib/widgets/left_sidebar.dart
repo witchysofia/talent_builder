@@ -4,6 +4,7 @@ import '../providers/talent_provider.dart';
 import 'dart:convert';
 import 'dart:html' as html;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../utils/icon_constants.dart';
 
 class LeftSidebar extends StatelessWidget {
   const LeftSidebar({super.key});
@@ -60,6 +61,8 @@ class LeftSidebar extends StatelessWidget {
           _buildSectionHeader('Tree Name'),
           const SizedBox(height: 12),
           _buildTextField(
+            provider: provider,
+            fieldName: 'name',
             initialValue: provider.treeName,
             onChanged: (val) => provider.setTreeName(val),
           ),
@@ -67,6 +70,8 @@ class LeftSidebar extends StatelessWidget {
           _buildSectionHeader('Rows (1-11)'),
           const SizedBox(height: 12),
           _buildTextField(
+            provider: provider,
+            fieldName: 'rows',
             initialValue: provider.rows.toString(),
             keyboardType: TextInputType.number,
             onChanged: (val) {
@@ -74,6 +79,10 @@ class LeftSidebar extends StatelessWidget {
               if (rows != null) provider.setRows(rows);
             },
           ),
+          const SizedBox(height: 24),
+          _buildSectionHeader('Tree Icon'),
+          const SizedBox(height: 12),
+          _buildTreeIconPicker(provider),
           const Spacer(),
           _buildExportButton(context, provider),
           const SizedBox(height: 12),
@@ -109,13 +118,25 @@ class LeftSidebar extends StatelessWidget {
         onTap: () => provider.switchTree(index),
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-        title: Text(
-          name,
-          style: TextStyle(
-            color: active ? Colors.white : Colors.white38,
-            fontSize: 14,
-            fontWeight: active ? FontWeight.bold : FontWeight.normal,
-          ),
+        title: Row(
+          children: [
+            Image.asset(
+              provider.getTreeIconPath(index),
+              width: 20,
+              height: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                name,
+                style: TextStyle(
+                  color: active ? Colors.white : Colors.white38,
+                  fontSize: 14,
+                  fontWeight: active ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+          ],
         ),
         trailing: active ? null : IconButton(
           icon: const Icon(Icons.delete_outline, color: Colors.white24, size: 16),
@@ -155,6 +176,8 @@ class LeftSidebar extends StatelessWidget {
   }
 
   Widget _buildTextField({
+    required TalentProvider provider,
+    required String fieldName,
     required String initialValue,
     required Function(String) onChanged,
     TextInputType keyboardType = TextInputType.text,
@@ -167,6 +190,7 @@ class LeftSidebar extends StatelessWidget {
         border: Border.all(color: Colors.white10),
       ),
       child: TextFormField(
+        key: ValueKey('${provider.currentTreeIndex}_$fieldName'),
         initialValue: initialValue,
         onChanged: onChanged,
         keyboardType: keyboardType,
@@ -222,10 +246,9 @@ class LeftSidebar extends StatelessWidget {
               SnackBar(content: Text('Exported $filename.json')),
             );
           } else {
-            // Fallback for non-web (though this app is designed for web)
             print(json);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Export printed to console (Desktop/Mobile support coming soon)')),
+              const SnackBar(content: Text('Export printed to console')),
             );
           }
         },
@@ -290,6 +313,10 @@ class LeftSidebar extends StatelessWidget {
     );
   }
 
+  Widget _buildTreeIconPicker(TalentProvider provider) {
+    return _TreeIconPicker(provider: provider);
+  }
+
   void _showImportDialog(BuildContext context, TalentProvider provider) {
     final controller = TextEditingController();
     showDialog(
@@ -344,6 +371,103 @@ class LeftSidebar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TreeIconPicker extends StatefulWidget {
+  final TalentProvider provider;
+  const _TreeIconPicker({required this.provider});
+
+  @override
+  State<_TreeIconPicker> createState() => _TreeIconPickerState();
+}
+
+class _TreeIconPickerState extends State<_TreeIconPicker> {
+  String _searchQuery = '';
+  late List<String> _filteredIcons;
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredIcons = IconConstants.allIcons;
+  }
+
+  void _filterIcons(String query) {
+    setState(() {
+      _searchQuery = query;
+      _filteredIcons = IconConstants.allIcons
+          .where((icon) => icon.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              backgroundColor: const Color(0xFF0D1117),
+              builder: (context) => Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    TextField(
+                      onChanged: _filterIcons,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        hintText: 'Search icons...',
+                        icon: Icon(Icons.search),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: GridView.builder(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 6,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
+                        itemCount: _filteredIcons.length,
+                        itemBuilder: (context, index) {
+                          final path = 'icons/${_filteredIcons[index]}';
+                          return GestureDetector(
+                            onTap: () {
+                              widget.provider.setTreeIcon(path);
+                              Navigator.pop(context);
+                            },
+                            child: Image.asset(path),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF161B22),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: Row(
+              children: [
+                Image.asset(widget.provider.treeIconPath, width: 32, height: 32),
+                const SizedBox(width: 12),
+                const Text('Change Icon', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                const Spacer(),
+                const Icon(Icons.edit, color: Colors.white24, size: 16),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
