@@ -1,12 +1,12 @@
 {
-    "name": "talent_builder",
-    "short_name": "talent_builder",
+    "name": "Talent Tree Builder",
+    "short_name": "Talent Builder",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#0D1117",
+    "theme_color": "#3B82F6",
+    "description": "Talent Tree Builder",
+    "orientation": "landscape-primary",
     "prefer_related_applications": false,
     "icons": [
         {
